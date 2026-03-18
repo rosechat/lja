@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>§ 86 SGB VIII – Interaktive Zuständigkeitsprüfung</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --navy:   #ffffff;
+  --navy2:  #ffffff;
+  --navy3:  #f5f5f5;
+  --blue:   #e8f0f8;
+  --gold:   #1a3a5c;
+  --gold2:  #1a3a5c;
+  --light:  #111111;
+  --muted:  #555555;
+  --yes:    #1e6b4a;
+  --yes2:   #27a06e;
+  --no:     #7a2020;
+  --no2:    #c0392b;
+  --result: #e8f0f8;
+  --warn:   #7a5c10;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--navy);
+  font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--light);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 0 60px;
+}
+
+/* ── HEADER ── */
+.header {
+  width: 100%;
+  background: #1a3a5c;
+  border-bottom: 2px solid #1a3a5c;
+  padding: 30px 24px 24px;
+  text-align: center;
+}
+.header .tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #a8c4e0;
+  margin-bottom: 10px;
+}
+.header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(22px, 4vw, 38px);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+}
+.header h1 em { color: #a8c4e0; font-style: normal; }
+.header p { font-size: 13px; color: #a8c4e0; margin-top: 6px; font-weight: 300; }
+
+/* ── MAIN AREA ── */
+.main {
+  width: 100%;
+  max-width: 760px;
+  padding: 32px 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* ── BREADCRUMB / PATH ── */
+.path-bar {
+  width: 100%;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 24px;
+  min-height: 36px;
+  line-height: 1.6;
+}
+.path-bar .path-label { color: #1a3a5c; font-weight: 600; margin-right: 6px; }
+.path-step {
+  display: inline-block;
+  background: #e8f0f8;
+  border: 1px solid #b0c8e0;
+  border-radius: 2px;
+  padding: 1px 7px;
+  margin: 2px 3px 2px 0;
+  font-size: 10.5px;
+  color: #111;
+}
+.path-step.yes { background: rgba(30,107,74,0.12); border-color: rgba(39,160,110,0.4); }
+.path-step.no  { background: rgba(122,32,32,0.1); border-color: rgba(192,57,43,0.3); }
+
+/* ── CARD ── */
+.card {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+  animation: fadeSlide 0.28s ease both;
+}
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-norm {
+  background: #1a3a5c;
+  border-bottom: 1px solid #1a3a5c;
+  padding: 8px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: none;
+  color: #a8c4e0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-norm .step-num {
+  background: #ffffff;
+  color: #1a3a5c;
+  font-size: 10px;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-body { padding: 22px 24px 20px; }
+
+.question {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  font-size: clamp(17px, 2.5vw, 21px);
+  color: #111;
+  line-height: 1.6;
+  margin-bottom: 14px;
+  padding-bottom: 4px;
+  overflow: visible;
+}
+
+.hint {
+  background: #f0f4f8;
+  border-left: 3px solid #1a3a5c;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #333;
+  line-height: 1.6;
+  border-radius: 0 3px 3px 0;
+  margin-bottom: 20px;
+}
+.hint strong { color: #1a3a5c; }
+
+/* ── BUTTONS ── */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 4px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.btn:active { transform: translateY(0); }
+
+.btn-ja {
+  background: var(--yes);
+  color: #fff;
+  border: 1px solid rgba(39,160,110,0.4);
+}
+.btn-ja:hover { background: var(--yes2); }
+
+.btn-nein {
+  background: var(--no);
+  color: #fff;
+  border: 1px solid rgba(192,57,43,0.4);
+}
+.btn-nein:hover { background: var(--no2); }
+
+.btn-icon { font-size: 18px; }
+
+/* ── RESULT CARD ── */
+.result-card {
+  width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  animation: fadeSlide 0.3s ease both;
+}
+
+.result-header {
+  padding: 14px 22px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.result-header .icon { font-size: 20px; }
+
+.result-header.type-norm { background: #1a3a5c; color: #a8c4e0; }
+.result-header.type-lja  { background: #7a2020; color: #fff; }
+.result-header.type-sonder { background: #1e6b4a; color: #fff; }
+
+.result-body {
+  padding: 20px 22px 24px;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+}
+
+.result-norm {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 6px;
+}
+.result-norm.lja-color { color: #7a2020; }
+.result-norm.sonder-color { color: #1e6b4a; }
+
+.result-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #222;
+  margin-bottom: 14px;
+}
+
+.result-detail {
+  background: #f5f7fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #333;
+}
+.result-detail .dl { color: #1a3a5c; font-weight: 600; margin-right: 6px; }
+
+/* ── KE BOX ── */
+.ke-box {
+  margin-top: 14px;
+  background: #e8f0f8;
+  border: 1px solid #b0c8e0;
+  border-left: 4px solid #1a3a5c;
+  border-radius: 0 4px 4px 0;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #111;
+}
+.ke-box strong { color: #1a3a5c; }
+
+/* ── RESET ROW ── */
+.reset-row {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.btn-reset {
+  padding: 10px 20px;
+  background: #e8f0f8;
+  border: 1px solid #1a3a5c;
+  color: #1a3a5c;
+  border-radius: 4px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-reset:hover { background: #d0e0f0; }
+
+.btn-back {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--muted);
+  color: var(--muted);
+  border-radius: 4px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-back:hover { border-color: var(--light); color: var(--light); }
+
+/* ── PROGRESS BAR ── */
+.progress-wrap {
+  width: 100%;
+  margin-bottom: 20px;
+}
+.progress-label {
+  font-size: 10px;
+  color: #555;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.progress-bar-bg {
+  width: 100%;
+  height: 3px;
+  background: #ddd;
+  border-radius: 2px;
+}
+.progress-bar-fill {
+  height: 3px;
+  background: linear-gradient(90deg, #1a3a5c, #4a7aac);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ── CONNECTOR ── */
+.connector {
+  width: 2px;
+  height: 24px;
+  background: linear-gradient(to bottom, #1a3a5c, rgba(26,58,92,0.1));
+  margin: 0 auto;
+}
+
+@media (max-width: 520px) {
+  .btn-row { flex-direction: column; }
+  .btn { min-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+
+<div class="main">
+  <div class="path-bar" id="pathBar">
+    <span class="path-label">Pfad:</span> <span id="pathSteps">–</span>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">Fortschritt</div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div id="app"></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  DECISION TREE
+//  Each node: { id, type:'q'|'result', norm, question, hint, ja, nein }
+//  result nodes: { id, type:'result', variant:'norm'|'lja'|'sonder', ... }
+// ─────────────────────────────────────────────────────────────
+
+const nodes = {
+
+  // ── EINSTIEG ──────────────────────────────────────────────
+  start: {
+    id: 'start',
+    type: 'q',
+    norm: 'Schritt 1 · § 86 Abs. 7 (Sonderzuständigkeit)',
+    step: 1,
+    question: 'Wird von dem Kind oder Jugendlichen Asyl nachgesucht oder wurde ein Asylantrag gestellt?',
+    hint: 'Bereits jede formlose Willensäußerung zur Schutzsuche genügt. <strong>§ 86 Abs. 7</strong> tritt hinter § 88a zurück (bereits geprüft). Gilt auch für Aufenthaltserlaubnis nach § 24 AufenthG (Ukraine).',
+    ja: 'result_asyl',
+    nein: 'q_dauerpflege'
+  },
+
+  q_dauerpflege: {
+    id: 'q_dauerpflege',
+    type: 'q',
+    norm: 'Schritt 2 · § 86 Abs. 6 (Sonderzuständigkeit)',
+    step: 2,
+    question: 'Befindet sich das Kind ununterbrochen seit mindestens 2 Jahren bei einer Pflegeperson nach § 44 Abs. 1 S. 1 SGB VIII?',
+    hint: '<strong>§ 86 Abs. 6</strong>: Zuständigkeitswechsel kraft Gesetz nach 2 Jahren, unabhängig vom Hilfeplan. Gilt auch für familienanaloge Wohnformen nach § 34 SGB VIII (eigenverantwortliche Haushaltsführung). Endet erst mit Auszug aus dem Pflegeverhältnis.',
+    ja: 'result_dauerpflege',
+    nein: 'q_abs5_voraussetzung'
+  },
+
+  // ── ABS. 5 ─────────────────────────────────────────────────
+  q_abs5_voraussetzung: {
+    id: 'q_abs5_voraussetzung',
+    type: 'q',
+    norm: 'Schritt 3 · § 86 Abs. 5 (Grundzuständigkeit)',
+    step: 3,
+    question: 'Hatten die Eltern zu Beginn der Leistung einen gemeinsamen gA nach § 86 Abs. 1 S. 1 und haben sie nun verschiedene?',
+    hint: 'Voraussetzung für <strong>§ 86 Abs. 5</strong>: Es muss zuvor ein gemeinsamer gA der Eltern bestanden haben. Trennung/Scheidung <em>nach</em> Leistungsbeginn.',
+    ja: 'q_abs5_psb',
+    nein: 'q_eltern_ga_gemeinsam'
+  },
+
+  q_abs5_psb: {
+    id: 'q_abs5_psb',
+    type: 'q',
+    norm: 'Schritt 3a · § 86 Abs. 5 (Grundzuständigkeit)',
+    step: 4,
+    question: 'Steht die Personensorge (PSB) allein einem Elternteil zu?',
+    hint: '<strong>§ 86 Abs. 5 S. 1</strong>: Anknüpfung an gA des PSB – dynamisch bei Aufenthaltswechsel oder Wechsel der PSB.<br><strong>§ 86 Abs. 5 S. 2</strong>: Bei gemeinsamer oder fehlender PSB bleibt die bisherige Zuständigkeit bestehen.',
+    ja: 'result_abs5_s1',
+    nein: 'result_abs5_s2'
+  },
+
+  // ── ABS. 1–4: ERSTPRÜFUNG ──────────────────────────────────
+  q_eltern_ga_gemeinsam: {
+    id: 'q_eltern_ga_gemeinsam',
+    type: 'q',
+    norm: 'Schritt 4 · § 86 Abs. 1 (Grundzuständigkeit)',
+    step: 5,
+    question: 'Haben beide Elternteile vor Beginn der Leistung einen gemeinsamen gA im selben Jugendamtsbezirk?',
+    hint: 'Gleiche Meldeadresse oder Wohnsitz nicht erforderlich – lediglich beide im selben <strong>Jugendamtsbezirk</strong>. Unabhängig von Personensorge und Familienstand.',
+    ja: 'result_abs1',
+    nein: 'q_eltern_ga_ueberhaupt'
+  },
+
+  q_eltern_ga_ueberhaupt: {
+    id: 'q_eltern_ga_ueberhaupt',
+    type: 'q',
+    norm: 'Schritt 5 · § 86 Abs. 2 / 3 / 4 (Grundzuständigkeit)',
+    step: 6,
+    question: 'Hat mindestens ein Elternteil einen gA im Inland?',
+    hint: '<strong>Ja</strong> → die Eltern haben verschiedene gA → weiter mit <strong>§ 86 Abs. 2 oder 3</strong> (je nach Personensorge).<br><strong>Nein</strong> → kein gA der Eltern im Inland → <strong>§ 86 Abs. 4</strong> (gA oder tA des Kindes).<br>Kein gA u. a. bei: Tod beider Eltern, Aufenthalt im Ausland, unbekannte Eltern. Feststellung durch Amtsermittlung nach <strong>§§ 20, 21 SGB X</strong>.',
+    ja: 'q_abs2_psb',
+    nein: 'q_abs4_kind_ga'
+  },
+
+  // ── ABS. 2 / 3 ─────────────────────────────────────────────
+  q_abs2_psb: {
+    id: 'q_abs2_psb',
+    type: 'q',
+    norm: 'Schritt 6 · § 86 Abs. 2 / 3 (Grundzuständigkeit)',
+    step: 7,
+    question: 'Hat mindestens ein Elternteil die Personensorge (auch wenn nur teilweise)?',
+    hint: '<strong>„Ganz oder gar nicht"-Prinzip</strong>: Einzelne entzogene PSB-Angelegenheiten sind unschädlich (§ 86 Abs. 2 S. 1 a. E.). Kein PSB z. B. bei vollständiger Entziehung und Übertragung auf Vormund.',
+    ja: 'q_abs2_kind_ga',
+    nein: 'q_abs3'
+  },
+
+  q_abs2_kind_ga: {
+    id: 'q_abs2_kind_ga',
+    type: 'q',
+    norm: 'Schritt 7 · § 86 Abs. 2 S. 1–2 (Grundzuständigkeit)',
+    step: 8,
+    question: 'Hat das Kind in den letzten 6 Monaten vor Beginn der Leistung seinen gA bei einem personensorgeberechtigten Elternteil gehabt?',
+    hint: '<strong>§ 86 Abs. 2 S. 2</strong>: Maßgeblicher Elternteil ist der, bei dem das Kind in den letzten 6 Monaten vBdL seinen gA hatte. → Zuständig ist das JA am gA dieses PSB.',
+    ja: 'result_abs2_s2',
+    nein: 'q_abs2_wechselmodell'
+  },
+
+  q_abs2_wechselmodell: {
+    id: 'q_abs2_wechselmodell',
+    type: 'q',
+    norm: 'Schritt 8 · § 86 Abs. 2 S. 3 (Grundzuständigkeit)',
+    step: 9,
+    question: 'Lebte das Kind im echten Wechselmodell (gA bei beiden Elternteilen gleichermaßen)?',
+    hint: '<strong>§ 86 Abs. 2 S. 3</strong>: Bei echtem Wechselmodell bestimmt der <strong>tatsächliche Aufenthaltsort des Kindes vBdL</strong> den maßgeblichen Elternteil. Der tA des Kindes zeigt, bei wem es sich unmittelbar vor Leistungsbeginn aufhielt.',
+    ja: 'result_abs2_s3',
+    nein: 'result_abs2_s4'
+  },
+
+  // ── ABS. 3 ─────────────────────────────────────────────────
+  q_abs3: {
+    id: 'q_abs3',
+    type: 'q',
+    norm: 'Schritt 7 · § 86 Abs. 3 (Grundzuständigkeit)',
+    step: 8,
+    question: 'Hat das Kind in den letzten 6 Monaten vor Leistungsbeginn seinen gA bei einem der Elternteile gehabt (auch ohne PSB)?',
+    hint: '<strong>§ 86 Abs. 3</strong> verweist auf Abs. 2 S. 2 und S. 4. Kein PSB bei keinem Elternteil (z. B. Vormund bestellt). Maßgebend: wo hatte das Kind tatsächlich seinen gA?',
+    ja: 'result_abs3_s2',
+    nein: 'result_abs3_s4'
+  },
+
+  // ── ABS. 4 ─────────────────────────────────────────────────
+  q_abs4_kind_ga: {
+    id: 'q_abs4_kind_ga',
+    type: 'q',
+    norm: 'Schritt 6 · § 86 Abs. 4 (Grundzuständigkeit)',
+    step: 7,
+    question: 'Hat das Kind selbst vor Beginn der Leistung einen gA?',
+    hint: '<strong>§ 86 Abs. 4 S. 1</strong>: Kein gA der maßgeblichen Person → gA des Kindes vBdL ist entscheidend. Ein Neugeborenes, das nur in der Klinik liegt, hat idR noch keinen gA begründet.',
+    ja: 'result_abs4_s1',
+    nein: 'result_abs4_s2'
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  //  RESULTS
+  // ─────────────────────────────────────────────────────────────
+
+  result_uma: {
+    id: 'result_uma', type: 'result', variant: 'sonder',
+    norm: '§ 88a SGB VIII',
+    title: 'Sonderzuständigkeit: Unbegleiteter ausländischer Minderjähriger',
+    text: '§ 88a SGB VIII geht als Spezialnorm allen anderen Zuständigkeitsvorschriften vor.',
+    details: [
+      ['Abs. 1', 'Vorläufige Inobhutnahme (§ 42a SGB VIII) → tatsächlicher Aufenthalt'],
+      ['Abs. 2', 'Inobhutnahme nach Zuweisung (§ 42b SGB VIII) → Zuweisungsentscheidung'],
+      ['Abs. 3', 'Leistungen (HzE, §§ 13, 19, 35a SGB VIII) → fortgesetzte Zuständigkeit aus Abs. 2 bzw. tA vBdL'],
+      ['Abs. 4', 'Vormundschaft/Pflegschaft → akzessorisch nach Abs. 1–3'],
+    ],
+    ke: 'Kostenerstattung nach §§ 89d SGB VIII (Erstattung an aufnehmendes JA durch überörtlichen Träger).'
+  },
+
+  result_asyl: {
+    id: 'result_asyl', type: 'result', variant: 'sonder',
+    norm: '§ 86 Abs. 7 SGB VIII',
+    title: 'Sonderzuständigkeit: Asylsuche',
+    text: 'Zuständig ist das JA, in dessen Bezirk das Kind/der Jugendliche vor Beginn der Leistung seinen tatsächlichen Aufenthalt hat (nach der Prüfungsreihenfolge).',
+    details: [
+      ['Prüfreihenfolge', '1. Zuweisung (S. 2) → 2. vorherige Inobhutnahme (S. 1 Hs. 2) → 3. tA vor BdL (S. 1 Hs. 1)'],
+      ['Hinweis', 'Tritt hinter § 88a zurück (bereits ausgeschlossen). Gilt auch für Aufenthaltserlaubnis nach § 24 AufenthG (Massenzustrom).'],
+    ],
+    ke: 'Liegt nur ein tA vor → <strong>LJA ist Kostenträger</strong> gem. § 89 SGB VIII.'
+  },
+
+  result_dauerpflege: {
+    id: 'result_dauerpflege', type: 'result', variant: 'sonder',
+    norm: '§ 86 Abs. 6 SGB VIII',
+    title: 'Sonderzuständigkeit: Dauerpflege (2-Jahres-Frist)',
+    text: 'Zuständig ist das JA, in dessen Bezirk die Pflegeperson ihren gewöhnlichen Aufenthalt hat. Zuständigkeitswechsel erfolgt kraft Gesetz.',
+    details: [
+      ['Frist', '2 Jahre ununterbrochener Aufenthalt bei der Pflegeperson (§ 44 Abs. 1 S. 1 SGB VIII)'],
+      ['Prognose', 'Nach 2 Jahren: Verbleibensprognose – soll das Kind dauerhaft bleiben?'],
+      ['Ende', 'Sonderzuständigkeit endet nach h. M. erst mit Auszug aus dem Pflegeverhältnis'],
+      ['§ 34', 'Gilt auch für familienanaloge Wohnformen (eigenverantwortliche Haushaltsführung)'],
+    ],
+    ke: 'Kostenerstattung nach § 89a SGB VIII (Erstattung an JA der Pflegeperson durch das vorher zuständige JA).'
+  },
+
+  result_abs1: {
+    id: 'result_abs1', type: 'result', variant: 'norm',
+    norm: '§ 86 Abs. 1 SGB VIII',
+    title: 'Gemeinsamer gA der Eltern',
+    text: 'Zuständig ist das JA, in dessen Bezirk die Eltern ihren gemeinsamen gewöhnlichen Aufenthalt haben.',
+    details: [
+      ['S. 1', 'Beide Elternteile im selben JA-Bezirk → JA des gemeinsamen gA der Eltern'],
+      ['S. 2', 'Nur die Mutter ist bekannt → JA des gA der Mutter'],
+      ['S. 3', 'Nur ein Elternteil vorhanden/bekannt → JA des gA dieses Elternteils'],
+      ['Hinweis', 'Unabhängig von PSB und Personensorge. Auch bei Trennung/Scheidung, solange gleicher Bezirk.'],
+    ],
+    ke: 'Kein Kostenerstattungsfall – zuständiges JA trägt Kosten selbst.'
+  },
+
+  result_abs2_s2: {
+    id: 'result_abs2_s2', type: 'result', variant: 'norm',
+    norm: '§ 86 Abs. 2 S. 2 SGB VIII',
+    title: 'Verschiedene gA – Kind zuletzt bei einem Elternteil',
+    text: 'Der maßgebliche Elternteil ist der, bei dem das Kind in den letzten 6 Monaten vor Leistungsbeginn seinen gA hatte. Zuständig ist das JA am gA dieses Elternteils (PSB).',
+    details: [
+      ['Maßgeblicher ET', 'Elternteil, bei dem das Kind in den letzten 6 Monaten vBdL gA hatte'],
+      ['Zuständiges JA', 'JA am aktuellen gA dieses Elternteils (dynamisch!)'],
+      ['Dynamik', '§ 86 Abs. 2 ist dynamisch: Wechselt der PSB den gA, wechselt die Zuständigkeit mit'],
+    ],
+    ke: 'Kein Kostenerstattungsfall – zuständiges JA trägt Kosten. Bei späterem Umzug des PSB: § 86c Weiterleistungspflicht beachten.'
+  },
+
+  result_abs2_s3: {
+    id: 'result_abs2_s3', type: 'result', variant: 'norm',
+    norm: '§ 86 Abs. 2 S. 3 SGB VIII',
+    title: 'Verschiedene gA – Echtes Wechselmodell',
+    text: 'Bei echtem Wechselmodell (gA bei beiden Elternteilen) bestimmt der tatsächliche Aufenthaltsort des Kindes unmittelbar vor Leistungsbeginn den maßgeblichen Elternteil.',
+    details: [
+      ['tA des Kindes', 'Bestimmt den maßgeblichen Elternteil'],
+      ['Zuständiges JA', 'JA am gA des so bestimmten Elternteils (PSB)'],
+    ],
+    ke: 'Kein Kostenerstattungsfall. Achtung: Nur bei echtem 50/50-Wechselmodell anwendbar.'
+  },
+
+  result_abs2_s4: {
+    id: 'result_abs2_s4', type: 'result', variant: 'norm',
+    norm: '§ 86 Abs. 2 S. 4 SGB VIII',
+    title: 'Verschiedene gA – Kein gA bei einem Elternteil in letzten 6 Monaten',
+    text: 'In den letzten 6 Monaten vor Leistungsbeginn hatte das Kind keinen gA bei einem der Elternteile. Maßgeblich ist nun der gA oder tA des Kindes selbst.',
+    details: [
+      ['1. Prüfung', 'gA des Kindes vBdL → JA dieses Bezirks'],
+      ['2. Prüfung', 'Kein gA des Kindes → tA des Kindes vBdL'],
+    ],
+    ke: 'Liegt nur ein <strong>tA des Kindes</strong> vor → <strong>LJA ist Kostenträger</strong> gem. § 89 SGB VIII.'
+  },
+
+  result_abs3_s2: {
+    id: 'result_abs3_s2', type: 'result', variant: 'norm',
+    norm: '§ 86 Abs. 3 i. V. m. Abs. 2 S. 2 SGB VIII',
+    title: 'Kein PSB – Kind zuletzt bei einem Elternteil',
+    text: 'Kein Elternteil hat PSB (z. B. Vormund bestellt). Maßgeblich ist der Elternteil, bei dem das Kind in den letzten 6 Monaten vBdL seinen gA hatte.',
+    details: [
+      ['Verweis', '§ 86 Abs. 3 verweist auf Abs. 2 S. 2 und S. 4'],
+      ['Zuständiges JA', 'JA am aktuellen gA dieses Elternteils'],
+    ],
+    ke: 'Kein Kostenerstattungsfall (gA des Kindes bei einem Elternteil festgestellt).'
+  },
+
+  result_abs3_s4: {
+    id: 'result_abs3_s4', type: 'result', variant: 'norm',
+    norm: '§ 86 Abs. 3 i. V. m. Abs. 2 S. 4 SGB VIII',
+    title: 'Kein PSB – kein gA bei einem Elternteil',
+    text: 'Weder PSB noch gA des Kindes bei einem Elternteil in letzten 6 Monaten. Maßgeblich: gA oder tA des Kindes selbst.',
+    details: [
+      ['1. Prüfung', 'gA des Kindes vBdL → JA dieses Bezirks'],
+      ['2. Prüfung', 'Kein gA des Kindes → tA des Kindes vBdL'],
+    ],
+    ke: 'Liegt nur ein <strong>tA</strong> vor → <strong>LJA ist Kostenträger</strong> gem. § 89 SGB VIII.'
+  },
+
+  result_abs4_s1: {
+    id: 'result_abs4_s1', type: 'result', variant: 'norm',
+    norm: '§ 86 Abs. 4 S. 1 SGB VIII',
+    title: 'Kein gA der Eltern – gA des Kindes',
+    text: 'Kein gA des maßgeblichen Elternteils im Inland. Das Kind selbst hat einen gA. Zuständig ist das JA am gA des Kindes vor Beginn der Leistung.',
+    details: [
+      ['Anwendungsfälle', 'Tod der Eltern, Eltern im Ausland, Eltern unbekannt (anonyme/vertrauliche Geburt)'],
+      ['Zuständiges JA', 'JA am gA des Kindes vBdL'],
+      ['Fortbestand', 'Zuständigkeit entfällt nicht, wenn gA des maßgeblichen ET später bekannt wird'],
+    ],
+    ke: 'Kein Kostenerstattungsfall (gA des Kindes festgestellt, örtliches JA trägt Kosten).'
+  },
+
+  result_abs4_s2: {
+    id: 'result_abs4_s2', type: 'result', variant: 'lja',
+    norm: '§ 86 Abs. 4 S. 2 SGB VIII',
+    title: '⚠ Nur tatsächlicher Aufenthalt → LJA ist Kostenträger',
+    text: 'Weder Eltern noch das Kind haben einen gewöhnlichen Aufenthalt im Inland. Zuständig ist das JA, in dessen Bezirk sich das Kind vor Beginn der Leistung tatsächlich aufhält.',
+    details: [
+      ['Zuständiges JA', 'JA am tatsächlichen Aufenthaltsort des Kindes vBdL'],
+      ['Amtsermittlung', '§§ 20, 21 SGB X: Alle Ermittlungsmöglichkeiten ausschöpfen und dokumentieren'],
+      ['Typische Fälle', 'Neugeborene ohne festgestellten gA, Kinder mit unbekannten Eltern'],
+    ],
+    ke: '<strong>LJA ist Kostenträger gem. § 89 SGB VIII.</strong> Das örtliche JA handelt auf Kosten des überörtlichen Trägers (LJA/LVR/LWL). Kostenerstattungsantrag unverzüglich stellen!'
+  },
+
+  result_abs5_s1: {
+    id: 'result_abs5_s1', type: 'result', variant: 'norm',
+    norm: '§ 86 Abs. 5 S. 1 SGB VIII',
+    title: 'Trennung nach Leistungsbeginn – PSB bei einem Elternteil',
+    text: 'Die Eltern hatten bei Leistungsbeginn gemeinsamen gA; nun verschiedene gA. PSB steht einem Elternteil zu. Zuständig ist das JA am gA des PSB (dynamisch).',
+    details: [
+      ['Dynamisch', 'Bei Umzug des PSB oder Wechsel der PSB ändert sich die Zuständigkeit automatisch'],
+      ['§ 86c', 'Bis zur Übernahme durch das neu zuständige JA: Weiterleistungspflicht des bisherigen JA'],
+    ],
+    ke: 'Kostenerstattung nach § 89c SGB VIII für die Zeit der Weiterleistung nach § 86c.'
+  },
+
+  result_abs5_s2: {
+    id: 'result_abs5_s2', type: 'result', variant: 'norm',
+    norm: '§ 86 Abs. 5 S. 2 SGB VIII',
+    title: 'Trennung nach Leistungsbeginn – gemeinsame oder keine PSB',
+    text: 'Gemeinsame oder fehlende PSB beider Elternteile: Die bisherige Zuständigkeit bleibt bestehen – auch wenn keine Person des Fallgeschehens mehr im Bezirk des zuständigen JA lebt.',
+    details: [
+      ['Statisch', 'Zuständigkeit „eingefroren" – kein Wechsel trotz Umzug aller Beteiligten'],
+      ['Fortbestand', 'Bleibt bestehen bis Leistungsende; bei neuer Leistung: Neuprüfung'],
+    ],
+    ke: 'Keine Kostenerstattung erforderlich – bisheriges JA bleibt zuständig und trägt Kosten.'
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────────
+let history = [];
+let currentId = 'start';
+const TOTAL_STEPS = 12;
+
+// ─────────────────────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────────────────────
+function render() {
+  const node = nodes[currentId];
+  const app = document.getElementById('app');
+
+  // Progress
+  const step = node.step || TOTAL_STEPS;
+  const pct = Math.min(100, Math.round((step / TOTAL_STEPS) * 100));
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  // Path
+  renderPath();
+
+  if (node.type === 'q') {
+    app.innerHTML = `
+      <div class="card">
+        <div class="card-norm">
+          <div class="step-num">${step}</div>
+          ${node.norm}
+        </div>
+        <div class="card-body">
+          <div class="question">${node.question}</div>
+          ${node.hint ? `<div class="hint">${node.hint}</div>` : ''}
+          <div class="btn-row">
+            <button class="btn btn-ja" onclick="go('${node.ja}','Ja')">
+              <span class="btn-icon">✓</span> Ja
+            </button>
+            <button class="btn btn-nein" onclick="go('${node.nein}','Nein')">
+              <span class="btn-icon">✗</span> Nein
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="reset-row">
+        ${history.length > 0 ? `<button class="btn-back" onclick="goBack()">← Zurück</button>` : ''}
+        <button class="btn-reset" onclick="reset()">↺ Neu starten</button>
+      </div>
+    `;
+  } else {
+    // Result
+    const v = node.variant;
+    const headerClass = v === 'lja' ? 'type-lja' : v === 'sonder' ? 'type-sonder' : 'type-norm';
+    const normClass   = v === 'lja' ? 'lja-color' : v === 'sonder' ? 'sonder-color' : '';
+    const icon        = v === 'lja' ? '⚠' : v === 'sonder' ? '★' : '✔';
+    const label       = v === 'lja' ? 'Ergebnis: LJA als Kostenträger' : v === 'sonder' ? 'Ergebnis: Sonderzuständigkeit' : 'Ergebnis: Örtliche Zuständigkeit';
+
+    const detailRows = (node.details || []).map(([k, v]) =>
+      `<div><span class="dl">${k}:</span>${v}</div>`
+    ).join('');
+
+    app.innerHTML = `
+      <div class="result-card">
+        <div class="result-header ${headerClass}">
+          <span class="icon">${icon}</span> ${label}
+        </div>
+        <div class="result-body">
+          <div class="result-norm ${normClass}">${node.norm}</div>
+          <div class="result-norm" style="font-size:16px;color:rgba(255,255,255,0.7);font-family:'IBM Plex Sans',sans-serif;font-weight:500;margin-bottom:12px">${node.title}</div>
+          <div class="result-text">${node.text}</div>
+          ${detailRows ? `<div class="result-detail">${detailRows}</div>` : ''}
+          ${node.ke ? `<div class="ke-box"><strong>Kostenerstattung:</strong> ${node.ke}</div>` : ''}
+        </div>
+      </div>
+      <div class="reset-row">
+        <button class="btn-back" onclick="goBack()">← Zurück</button>
+        <button class="btn-reset" onclick="reset()">↺ Neu starten</button>
+      </div>
+    `;
+    document.getElementById('progressFill').style.width = '100%';
+  }
+}
+
+function renderPath() {
+  const bar = document.getElementById('pathSteps');
+  if (history.length === 0) { bar.innerHTML = '–'; return; }
+  bar.innerHTML = history.map(h =>
+    `<span class="path-step ${h.answer === 'Ja' ? 'yes' : 'no'}">${h.norm}: ${h.answer}</span>`
+  ).join('');
+}
+
+function go(nextId, answer) {
+  const cur = nodes[currentId];
+  history.push({ id: currentId, norm: cur.norm || currentId, answer });
+  currentId = nextId;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  if (history.length === 0) return;
+  const prev = history.pop();
+  currentId = prev.id;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function reset() {
+  history = [];
+  currentId = 'start';
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
